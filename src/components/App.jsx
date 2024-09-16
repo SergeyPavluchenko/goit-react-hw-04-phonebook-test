@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { GlobalStyled } from './GlobalStyled';
 import { Layout } from './Layout/Layout';
 
@@ -8,74 +8,55 @@ import { Contacts } from './Contacts/Contacts';
 import initiatContacts from '../data.json';
 import { PageStyle } from './PageStyle';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+import React from 'react';
 
-  componentDidMount = () => {
-    const getContacts = localStorage.getItem('contacts');
-    if (getContacts !== null) {
-      const parseContact = JSON.parse(getContacts);
-      this.setState({ contacts: parseContact });
-      return;
-    }
-    this.setState({ contacts: initiatContacts });
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(
+    JSON.parse(localStorage.getItem('contacts')) ?? initiatContacts
+  );
+  const [filter, setFilter] = useState('');
 
-  componentDidUpdate = (prevProps, prevState) => {
-    if (prevState !== this.state.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  };
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  addPhoneNumber = newPhoneNumber => {
-    const { contacts } = this.state;
-
+  const addPhoneNumber = newPhoneNumber => {
     contacts.find(contact => contact.name === newPhoneNumber.name)
       ? Notify.failure(newPhoneNumber.name + 'is already in contact')
-      : this.setState(prewState => ({
-          contacts: [...prewState.contacts, newPhoneNumber],
-        }));
+      : setContacts(prewContacts => [...prewContacts, newPhoneNumber]);
   };
 
-  filterNumber = e => {
+  const filterNumber = e => {
     const inputValue = e.target.value;
     const normalizeiedInput = inputValue.toLowerCase();
-    this.setState({ filter: normalizeiedInput });
+    setFilter(normalizeiedInput);
   };
 
-  getFilterContact = () => {
-    const { contacts, filter } = this.state;
+  const getFilterContact = () => {
     const normalizedFilter = filter.toLocaleLowerCase();
     return contacts.filter(({ name }) =>
       name.toLocaleLowerCase().includes(normalizedFilter)
     );
   };
 
-  deleteNumber = numberId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => numberId !== contact.id),
-    }));
+  const deleteNumber = numberId => {
+    setContacts(prevContacts => {
+      return prevContacts.filter(prevCotact => numberId !== prevCotact.id);
+    });
   };
 
-  render() {
-    const { filter } = this.state;
-
-    return (
-      <Layout>
-        <PageStyle>
-          <PhoneForm onSave={this.addPhoneNumber} />
-          <Contacts
-            contactsRender={this.getFilterContact()}
-            value={filter}
-            onFilter={this.filterNumber}
-            onDelete={this.deleteNumber}
-          />
-        </PageStyle>
-        <GlobalStyled />
-      </Layout>
-    );
-  }
-}
+  return (
+    <Layout>
+      <PageStyle>
+        <PhoneForm onSave={addPhoneNumber} />
+        <Contacts
+          contactsRender={getFilterContact()}
+          value={filter}
+          onFilter={filterNumber}
+          onDelete={deleteNumber}
+        />
+      </PageStyle>
+      <GlobalStyled />
+    </Layout>
+  );
+};

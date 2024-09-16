@@ -25,8 +25,8 @@ export const PhoneForm = ({ onSave }) => {
         }}
         onSubmit={(values, actions) => {
           onSave({
-            ...values,
             id: nanoid(),
+            ...values,
           });
           actions.resetForm();
         }}
